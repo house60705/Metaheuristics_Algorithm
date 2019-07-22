@@ -1,7 +1,6 @@
 #include <iostream>
 #include <random>
 #include <vector>
-
 using namespace std;
 
 int Evaluate(vector<int> a) {
