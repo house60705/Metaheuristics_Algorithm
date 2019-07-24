@@ -5,6 +5,11 @@
 #include <math.h>
 using namespace std;
 
+random_device rd;
+mt19937 generator(rd());
+uniform_int_distribution<int> unif(0, 1);
+
+
 int Evaluate(vector<int> a, vector<int> weight, vector<int> value, int Bagweight) {
 	int sumWeight = 0, sumValue = 0;
 	for (int i = 0; i < a.size(); i++) {
@@ -23,7 +28,7 @@ vector<int> NeighborNode(vector<int> a, vector<int> weight, vector<int> value, i
 	vector<int> b = a;
 	if (random1>random2) {
 		for (int i = random2; i <= random1; i++)
-			b[i] = abs(b[i] - 1);
+			b[i] = unif(generator);
 	}
 	else {
 		for (int i = random1; i <= random2; i++)
@@ -34,29 +39,26 @@ vector<int> NeighborNode(vector<int> a, vector<int> weight, vector<int> value, i
 int main(int argc, char* argv[])
 {
 	int  runs = atoi(argv[1]), times = atoi(argv[2]), bits = atoi(argv[3]), round = 1;
-	int  input, num = 1, BagWeight = 165;
+	int  input, num = 1, BagWeight = 750;
 	vector<int> weight, value;
-	ifstream infileWeight("p01_w.txt");
+	ifstream infileWeight("p07_w.txt");
 	while (infileWeight >> input) {
 		weight.push_back(input);
 		num++;
 	}
-	ifstream infileValue("p01_v.txt");
+	ifstream infileValue("p07_v.txt");
 	while (infileValue >> input) {
 		value.push_back(input);
 	}
-	random_device rd;
-	mt19937 generator(rd());
-	uniform_int_distribution<> unif(0, 1);
 	uniform_real_distribution<> unifr(0, (bits - 1));
 	vector<int> BestSolution(bits, 0);
 	int BestSolutionNum = 0;
 	/*for (auto i = NowSolution.begin(); i != NowSolution.end(); ++i) {
 	cout << *i;
 	}*/
-	while (runs--)
+	while (BestSolutionNum!=1458)
 	{
-		cout << "round : " << round << endl;
+		//cout << "round : " << round << endl;
 		times = atoi(argv[2]);
 		vector<int> NowSolution(bits, 0);
 		vector<int> NeightborSolution(bits, 0);
@@ -73,6 +75,7 @@ int main(int argc, char* argv[])
 
 		while (times--)
 		{
+			
 			NeightborSolution = NeighborNode(NowSolution, weight, value, BagWeight, unifr(generator), unifr(generator));
 			NeightborSolutionNum = Evaluate(NeightborSolution, weight, value, BagWeight);
 			NowSolutionNum = Evaluate(NowSolution, weight, value, BagWeight);
@@ -94,4 +97,5 @@ int main(int argc, char* argv[])
 	cout << "The best solution is : ";
 	for (auto i = BestSolution.begin(); i != BestSolution.end(); i++) { cout << *i; }
 	cout << " , the number of 1 is	: " << BestSolutionNum << endl;
+	system("pause");
 }

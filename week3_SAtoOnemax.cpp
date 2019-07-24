@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 		vector<int> NeightborSolution(bits, 0);
 		vector<int> RoundBestSolution(bits, 0);
 		double NowSolutionNum, RoundBestSolutionNum = 0, NeightborSolutionNum = 0;
-		double temp = 50000, ram = r(generator);						//r·|ÄY­«¼vÅTµ²ªG
+		double temp = 50000, ram = r(generator);						//ræœƒåš´é‡å½±éŸ¿çµæœ
 		for (auto i = NowSolution.begin(); i != NowSolution.end(); ++i) {
 			*i = unif(generator);
 		}
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 			RoundBestSolution = NowSolution;
 		}
 		cout << ram << endl;
-		while (temp>1)													//·Å«×¤]¬O
+		while (temp>1)													//æº«åº¦ä¹Ÿæ˜¯
 		{
 			NeightborSolution = NeighborNode(NowSolution, unifr(generator));
 			NeightborSolutionNum = Evaluate(NeightborSolution);
