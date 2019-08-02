@@ -1,70 +1,90 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <math.h>
 using namespace std;
 
-int Evaluate(vector<int> a) {
+typedef vector<int> Solution;
+/*----set random number device-----*/
+random_device rd;
+mt19937 generator(rd());
+uniform_int_distribution<> unif(0, 1);
+/*---------------------------------*/
+void Initialization(Solution& now, Solution& neighbor, Solution& roundbest, int& nownum, int& neighbornum, int& roundnum, int bit);
+int Evaluate(Solution a);
+Solution NeighborNode(Solution a, int random);
+
+int main(int argc, char* argv[])
+{
+	int  times = atoi(argv[1]), iters = atoi(argv[2]), bits = atoi(argv[3]), round = 1;
+	Solution Bestsol(bits, 0), Nowsol, Neighbor, Roundbest;
+	int NowsolNum, RoundbestNum = 0, NeighborNum = 0;
+	uniform_real_distribution<> unifr(0, (bits - 1));
+	int BestsolNum = 0;
+	while (times--)
+		//number of runs
+	{
+		cout << "round : " << round << endl;
+		iters = atoi(argv[2]);
+		Initialization(Nowsol, Neighbor, Roundbest, NowsolNum, NeighborNum, RoundbestNum, bits);
+		//Initializing the value at first of a run
+		while (iters--)
+			//number of iterations
+		{
+			Neighbor = NeighborNode(Nowsol, unifr(generator));
+			//find the neighbor of this solution 
+
+			NeighborNum = Evaluate(Neighbor);
+			NowsolNum = Evaluate(Nowsol);
+			//fitness function
+
+			if (NeighborNum > NowsolNum)
+				//neighnor is better fitness
+			{
+				RoundbestNum = NeighborNum;
+				Roundbest = Neighbor;
+				Nowsol = Neighbor;
+				NowsolNum = NeighborNum;
+			}
+		}
+		if (RoundbestNum > BestsolNum)
+		{
+			BestsolNum = RoundbestNum;
+			Bestsol = Roundbest;
+			////updating the best solution this round
+		}
+		round++;
+	}
+	cout << "The best solution is : ";
+	for (auto i = Bestsol.begin(); i != Bestsol.end(); i++) { cout << *i; }
+	cout << " , the number of 1 is	: " << BestsolNum << endl;
+	//output
+}
+
+void Initialization(Solution& now, Solution& neighbor, Solution& roundbest, int& nowNum, int& neighborNum, int& roundNum, int bits) {
+	now.resize(bits);
+	neighbor.resize(bits);
+
+	for (auto i = now.begin(); i != now.end(); ++i) {
+		*i = unif(generator);
+	}
+	//begin with random solution
+
+	roundbest = now;
+	nowNum = Evaluate(now);
+	neighborNum = 0;
+	roundNum = nowNum;
+}
+
+int Evaluate(Solution a) {
 	int sum = 0;
 	for (auto i = a.begin(); i != a.end(); ++i) {
 		sum += *i;
 	}
 	return sum;
 }
-vector<int> NeighborNode(vector<int> a, int random)
+Solution NeighborNode(Solution a, int random)
 {
 	a[random] = abs(a[random] - 1);
 	return a;
-}
-int main(int argc, char** argv)
-{
-	int  runs = atoi(argv[1]), times = atoi(argv[2]), bits = atoi(argv[3]), round = 1;
-	random_device rd;
-	mt19937_64 generator(rd());
-	uniform_int_distribution<> unif(0, 1);
-	uniform_real_distribution<> unifr(0, bits - 1);
-	vector<int> BestSolution(bits, 0);
-	int BestSolutionNum = 0;
-	/*for (auto i = NowSolution.begin(); i != NowSolution.end(); ++i) {
-	cout << *i;
-	}*/
-	while (runs--)
-	{
-		times = atoi(argv[2]);
-		vector<int> NowSolution(bits, 0);
-		vector<int> RoundBestSolution(bits, 0);
-		vector<int> NeightborSolution(bits, 0);
-		int NowSolutionNum, RoundBestSolutionNum = 0, NeightborSolutionNum = 0;
-		cout << "round : " << round << endl;
-		for (auto i = NowSolution.begin(); i != NowSolution.end(); ++i) {
-			*i = unif(generator);
-		}
-		if (Evaluate(NowSolution) > RoundBestSolutionNum)
-		{
-			RoundBestSolutionNum = Evaluate(NowSolution);
-			RoundBestSolution = NowSolution;
-		}
-
-		while (times--)
-		{
-			NeightborSolution = NeighborNode(NowSolution, unifr(generator));
-			NeightborSolutionNum = Evaluate(NeightborSolution);
-			NowSolutionNum = Evaluate(NowSolution);
-			if (NeightborSolutionNum > NowSolutionNum) {
-				RoundBestSolutionNum = NeightborSolutionNum;
-				RoundBestSolution = NeightborSolution;
-				NowSolution = NeightborSolution;
-				NowSolutionNum = NeightborSolutionNum;
-			}
-		}
-		if (RoundBestSolutionNum > BestSolutionNum)
-		{
-			BestSolutionNum = RoundBestSolutionNum;
-			BestSolution = RoundBestSolution;
-		}
-		round++;
-	}
-	cout << "The best solution is : ";
-	for (auto i = BestSolution.begin(); i != BestSolution.end(); i++) { cout << *i; }
-	cout << " , the number of 1 is : " << BestSolutionNum << endl;
-	system("pause");
 }
