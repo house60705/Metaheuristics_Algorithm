@@ -32,21 +32,21 @@ vector<int> NeighborNode(vector<int> a, vector<int> weight, vector<int> value, i
 	}
 	else {
 		for (int i = random1; i <= random2; i++)
-			b[i] = abs(b[i] - 1);
+			b[i] = unif(generator);
 	}
 	return b;
 }
 int main(int argc, char* argv[])
 {
 	int  runs = atoi(argv[1]), times = atoi(argv[2]), bits = atoi(argv[3]), round = 1;
-	int  input, num = 1, BagWeight = 750;
+	int  input, num = 1, BagWeight = 6404180,sum= 0;
 	vector<int> weight, value;
-	ifstream infileWeight("p07_w.txt");
+	ifstream infileWeight("p08_w.txt");
 	while (infileWeight >> input) {
 		weight.push_back(input);
 		num++;
 	}
-	ifstream infileValue("p07_v.txt");
+	ifstream infileValue("p08_v.txt");
 	while (infileValue >> input) {
 		value.push_back(input);
 	}
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 	/*for (auto i = NowSolution.begin(); i != NowSolution.end(); ++i) {
 	cout << *i;
 	}*/
-	while (BestSolutionNum!=1458)
+	while (runs--)
 	{
 		//cout << "round : " << round << endl;
 		times = atoi(argv[2]);
@@ -75,11 +75,10 @@ int main(int argc, char* argv[])
 
 		while (times--)
 		{
-			
 			NeightborSolution = NeighborNode(NowSolution, weight, value, BagWeight, unifr(generator), unifr(generator));
 			NeightborSolutionNum = Evaluate(NeightborSolution, weight, value, BagWeight);
 			NowSolutionNum = Evaluate(NowSolution, weight, value, BagWeight);
-
+			
 			if (NeightborSolutionNum > NowSolutionNum) {
 				RoundBestSolutionNum = NeightborSolutionNum;
 				RoundBestSolution = NeightborSolution;
@@ -92,10 +91,12 @@ int main(int argc, char* argv[])
 			BestSolutionNum = RoundBestSolutionNum;
 			BestSolution = RoundBestSolution;
 		}
+		sum += RoundBestSolutionNum;
 		round++;
 	}
 	cout << "The best solution is : ";
 	for (auto i = BestSolution.begin(); i != BestSolution.end(); i++) { cout << *i; }
-	cout << " , the number of 1 is	: " << BestSolutionNum << endl;
+	cout << " , the value is	: " << BestSolutionNum << endl;
+	cout << sum / 50 << endl;
 	system("pause");
 }
