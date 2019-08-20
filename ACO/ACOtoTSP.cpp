@@ -54,7 +54,6 @@ int main(int argc, char* argv[])
 	vector<vector<pheromone>> table;
 	vector<city> cities;
 	Ant ants;
-	uniform_real_distribution<> unifr(0, (citynum - 1));
 	Solution best;
 	double bestPath = INT32_MAX;
 	while (runs--)
@@ -89,7 +88,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	cout << "The best solution is : ";
-	for (auto i = best.begin(); i != best.end(); i++) { cout << *i << " "; }
+	for (auto i = best.begin(); i != best.end(); i++) { cout << *i + 1 << " "; }
 	cout << " , the value is	: " << bestPath << endl;
 	//output
 	system("pause");
@@ -124,6 +123,7 @@ void Initialization(vector<vector<pheromone>>& table, vector<city>& cities, int 
 			table[i][j].dist = num;
 		}
 	}
+	
 }
 
 void Random(Ant& ants, int citynum, int antnum)
@@ -146,11 +146,16 @@ void Random(Ant& ants, int citynum, int antnum)
 				count++;
 			}
 		}
+		ant.push_back(0);
+
 		ants.push_back(ant);
 	}
 	/*for (int j = 0; j < antnum; j++)
 	{
 	for (auto i = ants[j].begin(); i != ants[j].end(); i++)
+
+
+
 	{ cout << *i << " "; }
 	cout << endl;
 	}*/
@@ -169,6 +174,7 @@ void SolutionCons(vector<vector<pheromone>> table, Ant& ants, int citynum, doubl
 		vector<probTable> pTable(citynum, init);
 		ants[i][0] = 0;
 		pTable[0].isSel = true;
+		
 		for (int j = 1; j < citynum; j++)
 		{
 			double seleProb = r(generator);
@@ -208,6 +214,7 @@ void SolutionCons(vector<vector<pheromone>> table, Ant& ants, int citynum, doubl
 
 			/*------------------------------------*/
 		}
+		ants[i][citynum] = 0;
 	}
 }
 
@@ -234,7 +241,7 @@ void PherUpdate(Ant ants, vector<vector<pheromone>>& table, int citynum, int Q, 
 	for (int i = 0; i < ants.size(); i++)
 	{
 		double totalDist = PathDist(ants[i], table);
-		for (int j = 0; j < citynum - 1; j++)
+		for (int j = 0; j < citynum ; j++)
 		{
 			table[ants[i][j]][ants[i][j + 1]].phe += Q / totalDist;
 			table[ants[i][j + 1]][ants[i][j]].phe += Q / totalDist;
@@ -271,5 +278,4 @@ void TotalPath(Ant& ants, vector<vector<pheromone>>& table, Solution& roundBest,
 			roundBest = ants[i];
 		}
 	}
-
 }
