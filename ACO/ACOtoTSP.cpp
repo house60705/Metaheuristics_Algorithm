@@ -43,18 +43,20 @@ void Initialization(vector<vector<pheromone>>& table, vector<city>& cities, int 
 void Random(Ant& ants, int citynum, int antnum);
 void SolutionCons(vector<vector<pheromone>> table, Ant& ants, int citynum, double alpha, double beta);
 void PherUpdate(Ant ants, vector<vector<pheromone>>& table, int citynum, int Q, double p);
-double totalPij(vector<vector<pheromone>> table, vector<probTable> pTable, int start, double alpha, double beta);
+void TotalPath(Ant& ants, vector<vector<pheromone>>& table, Solution& roundBest, double& roundBestPath);
+double TotalPij(vector<vector<pheromone>> table, vector<probTable> pTable, int start, double alpha, double beta);
 double PathDist(Solution ant, vector<vector<pheromone>>& table);
 
 int main(int argc, char* argv[])
 {
 	int runs = atoi(argv[1]), iters = atoi(argv[2]), citynum = atoi(argv[3]), antnum = atoi(argv[4]), Q = atoi(argv[5]);
-	double p = atoi(argv[6]), alpha = atoi(argv[7]), beta = atoi(argv[8]), round = 1;
+	double p = atof(argv[6]), alpha = atoi(argv[7]), beta = atoi(argv[8]), round = 1;
 	vector<vector<pheromone>> table;
 	vector<city> cities;
 	Ant ants;
 	uniform_real_distribution<> unifr(0, (citynum - 1));
-	cout << endl;
+	Solution best;
+	double bestPath = INT32_MAX;
 	while (runs--)
 		//number of runs
 	{
@@ -63,7 +65,6 @@ int main(int argc, char* argv[])
 		Initialization(table, cities, citynum, antnum);
 		Random(ants, citynum, antnum);
 		PherUpdate(ants, table, citynum, Q, p);
-		//updating the best solution this round
 		/*for (int i = 0; i < ants.size(); i++) {
 			for (auto j = ants[i].begin(); j != ants[i].end(); ++j)
 			{
@@ -72,16 +73,24 @@ int main(int argc, char* argv[])
 			cout << endl;
 		}
 		cout << endl;*/
+		Solution roundBest;
+		double roundBestPath = INT32_MAX;
 		while (iters--)
 		{
 			SolutionCons(table, ants, citynum, alpha, beta);
-
 			PherUpdate(ants, table, citynum, Q, p);
+			TotalPath(ants, table, roundBest, roundBestPath);
+			cout << roundBestPath << endl;
+		}
+		if (roundBestPath < bestPath)
+		{
+			bestPath = roundBestPath;
+			best = roundBest;
 		}
 	}
-	/*cout << "The best solution is : ";
-	for (auto i = Bestsol.sol.begin(); i != Bestsol.sol.end(); i++) { cout << *i; }
-	cout << " , the value is	: " << Bestsol.value << endl;*/
+	cout << "The best solution is : ";
+	for (auto i = best.begin(); i != best.end(); i++) { cout << *i << " "; }
+	cout << " , the value is	: " << bestPath << endl;
 	//output
 	system("pause");
 }
@@ -93,7 +102,7 @@ void Initialization(vector<vector<pheromone>>& table, vector<city>& cities, int 
 	//Solution ant(citynum, 0);
 	pheromone pher;
 	pher.dist = 0;
-	pher.phe = 0;
+	pher.phe = 1;
 	vector<vector<pheromone>> init(citynum, vector<pheromone>(citynum, pher));
 	ifstream infileWeight("tsp51.txt");
 	while (infileWeight >> input) {
@@ -105,7 +114,7 @@ void Initialization(vector<vector<pheromone>>& table, vector<city>& cities, int 
 		cities.push_back(city);
 	}
 	/*for (size_t i = 0; i < antnum; i++)
-		ants.push_back(ant);*/
+	ants.push_back(ant);*/
 	table = init;
 	for (int i = 0; i < citynum; i++)
 	{
@@ -122,9 +131,11 @@ void Random(Ant& ants, int citynum, int antnum)
 	uniform_real_distribution<> unifr(0, (citynum));
 	for (int i = 0; i < antnum; i++)
 	{
-		int count = 0;
+		int count = 1;
 		vector<bool> isSelect(citynum, false);
+		isSelect[0] = true;
 		Solution ant;
+		ant.push_back(0);
 		while (count != citynum)
 		{
 			int ran = unifr(generator);
@@ -139,9 +150,9 @@ void Random(Ant& ants, int citynum, int antnum)
 	}
 	/*for (int j = 0; j < antnum; j++)
 	{
-		for (auto i = ants[j].begin(); i != ants[j].end(); i++)
-		{ cout << *i << " "; }
-		cout << endl;
+	for (auto i = ants[j].begin(); i != ants[j].end(); i++)
+	{ cout << *i << " "; }
+	cout << endl;
 	}*/
 }
 
@@ -151,59 +162,65 @@ void SolutionCons(vector<vector<pheromone>> table, Ant& ants, int citynum, doubl
 	init.isSel = false;
 	init.val = 0;
 	uniform_real_distribution<> unifr(0, (citynum));
+
 	for (int i = 0; i < ants.size(); i++)
 	{
 		int start = 0;
 		vector<probTable> pTable(citynum, init);
-		ants[i][0] = unifr(generator);
-		pTable[ants[i][0]].isSel = true;
+		ants[i][0] = 0;
+		pTable[0].isSel = true;
 		for (int j = 1; j < citynum; j++)
 		{
 			double seleProb = r(generator);
 			double temp = 0;
-			double totalP = totalPij(table, pTable, start, alpha, beta);
-			//cout << seleProb << endl;
+			double totalP = TotalPij(table, pTable, start, alpha, beta);
+			//cout << "seleProb = " << seleProb << ", ";
 			/*------------update pTable-----------*/
-			for (int k = 0; k < pTable.size(); k++)
+			for (int k = 1; k < pTable.size(); k++)
 			{
-				if (!pTable[k].isSel)
+				//cout << "k=" << k << ", ";
+				if (!pTable[k].isSel && table[start][k].dist != 0)
 				{
-					pTable[k].val = ((pow(table[start][k].phe, alpha) * pow(table[start][k].dist, beta)) / totalP) + temp;
-					//cout << pow(table[start][k].phe, alpha) << " " << pow(table[start][k].dist, beta) << endl;
+					pTable[k].val = ((pow(table[start][k].phe, alpha) * pow(1 / table[start][k].dist, beta)) / totalP) + temp;
+					//cout << pow(table[start][k].phe, alpha) << " " << pow(table[start][k].dist, beta) << ", ";
 					temp = pTable[k].val;
 					//cout << pTable[k].val << endl;
 					if (seleProb - pTable[k].val < 0)
 					{
 						ants[i][j] = k;
+						start = k;
 						pTable[k].isSel = true;
+						break;
 					}
 				}
 			}
+			//cout << endl;
+			/*for (auto k = 0; k < pTable.size(); k++)
+			{
+				cout << pTable[k].val << " ";
+			}
+			cout << endl;*/
 			/*for (auto k=ants[i].begin(); k != ants[i].end(); ++k)
-				{
-					cout << *k << " ";
-				}
-				cout << endl;*/
-				/*for (auto k=0; k <= pTable.size(); k++)
-					{
-						cout << pTable[k].val << " ";
-					}
-					cout << endl;*/
-					/*------------------------------------*/
-			start++;
+			{
+			cout << *k << " ";
+			}
+			cout << endl;*/
+
+			/*------------------------------------*/
 		}
 	}
-
 }
 
 
-double totalPij(vector<vector<pheromone>> table, vector<probTable> pTable, int start, double alpha, double beta)
+double TotalPij(vector<vector<pheromone>> table, vector<probTable> pTable, int start, double alpha, double beta)
 {
 	double sum = 0;
 	for (int i = 0; i < pTable.size(); i++)
 	{
-		if (!pTable[i].isSel)
-			sum += pow(table[start][i].phe, alpha) * pow(table[start][i].dist, beta);
+		if (!pTable[i].isSel && table[start][i].dist != 0) {
+			sum += pow(table[start][i].phe, alpha) * pow(1 / table[start][i].dist, beta);
+			//cout << "start=" << start << ", i=" << i << ", "<< table[start][i].phe << ", " <<  table[start][i].dist << ", " <<pow(table[start][i].phe, alpha) * pow(1 / table[start][i].dist, beta) << endl;
+		}
 	}
 	return sum;
 }
@@ -221,15 +238,12 @@ void PherUpdate(Ant ants, vector<vector<pheromone>>& table, int citynum, int Q, 
 		{
 			table[ants[i][j]][ants[i][j + 1]].phe += Q / totalDist;
 			table[ants[i][j + 1]][ants[i][j]].phe += Q / totalDist;
-			cout << table[ants[i][j]][ants[i][j + 1]].phe << " ";
 		}
 	}
-	/*for (int i = 0; i < citynum; i++)
+	/*for (int i = 0; i < 51; i++)
 	{
-		for (int j = 0; j < citynum; j++)
-		{
+		for (int j = 0; j < 51; j++)
 			cout << table[i][j].phe << " ";
-		}
 		cout << endl;
 	}*/
 }
@@ -240,4 +254,22 @@ double PathDist(Solution ant, vector<vector<pheromone>>& table)
 	for (int i = 0; i < ant.size() - 1; i++)
 		dist += table[ant[i]][ant[i + 1]].dist;
 	return dist;
+}
+
+void TotalPath(Ant& ants, vector<vector<pheromone>>& table, Solution& roundBest, double& roundBestPath)
+{
+	Solution sum(ants.size(), 0);
+	for (int i = 0; i < ants.size(); i++)
+	{
+		for (int j = 0; j < ants[i].size() - 1; j++)
+		{
+			sum[i] += table[ants[i][j]][ants[i][j + 1]].dist;
+		}
+		if (sum[i] < roundBestPath)
+		{
+			roundBestPath = sum[i];
+			roundBest = ants[i];
+		}
+	}
+
 }
