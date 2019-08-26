@@ -79,14 +79,16 @@ int main(int argc, char* argv[])
 			SolutionCons(table, ants, citynum, alpha, beta);
 			PherUpdate(ants, table, citynum, Q, p);
 			TotalPath(ants, table, roundBest, roundBestPath);
-			cout << roundBestPath << endl;
+
 		}
 		if (roundBestPath < bestPath)
 		{
 			bestPath = roundBestPath;
 			best = roundBest;
 		}
+		cout << bestPath << endl;
 	}
+
 	cout << "The best solution is : ";
 	for (auto i = best.begin(); i != best.end(); i++) { cout << *i + 1 << " "; }
 	cout << " , the value is	: " << bestPath << endl;
@@ -96,6 +98,7 @@ int main(int argc, char* argv[])
 
 void Initialization(vector<vector<pheromone>>& table, vector<city>& cities, int citynum, int antnum)
 {
+	table.clear();
 	int  input;
 	city city;
 	//Solution ant(citynum, 0);
@@ -123,11 +126,12 @@ void Initialization(vector<vector<pheromone>>& table, vector<city>& cities, int 
 			table[i][j].dist = num;
 		}
 	}
-	
+
 }
 
 void Random(Ant& ants, int citynum, int antnum)
 {
+	ants.clear();
 	uniform_real_distribution<> unifr(0, (citynum));
 	for (int i = 0; i < antnum; i++)
 	{
@@ -174,7 +178,7 @@ void SolutionCons(vector<vector<pheromone>> table, Ant& ants, int citynum, doubl
 		vector<probTable> pTable(citynum, init);
 		ants[i][0] = 0;
 		pTable[0].isSel = true;
-		
+
 		for (int j = 1; j < citynum; j++)
 		{
 			double seleProb = r(generator);
@@ -241,7 +245,7 @@ void PherUpdate(Ant ants, vector<vector<pheromone>>& table, int citynum, int Q, 
 	for (int i = 0; i < ants.size(); i++)
 	{
 		double totalDist = PathDist(ants[i], table);
-		for (int j = 0; j < citynum ; j++)
+		for (int j = 0; j < citynum; j++)
 		{
 			table[ants[i][j]][ants[i][j + 1]].phe += Q / totalDist;
 			table[ants[i][j + 1]][ants[i][j]].phe += Q / totalDist;
